@@ -62,7 +62,7 @@ class Login(Resource):
         
             session['user_id'] = user.id
             return user.to_dict(), 200
-
+        print("Login")
         return {}, 401
 
 class Logout(Resource):
@@ -81,21 +81,24 @@ class CheckSession(Resource):
         if user_id:
             user = User.query.filter(User.id == user_id).first()
             return user.to_dict(), 200
-        
+        print("CheckSession")
         return {}, 401
     
 
 @app.before_request
 def check_if_signed_in():
-    if not session['user_id']\
-        and request.endpoint != 'article_list':
+    if not session.get('user_id')\
+        and (request.endpoint == 'member_index' or request.endpoint == 'member_article'):
+        print("check_if_signed_in")
+        print (session.get('user_id'))
+        print (request.endpoint)
         return {'error': "Unauthorized"}, 401
     
 class MemberOnlyIndex(Resource):
     
     def get(self):
-        article = Article.query(Article.is_member_only).all()
-        article_dict = article.to_dict()
+        articles = Article.query.filter(Article.is_member_only == True).all()
+        article_dict = [article.to_dict() for article in articles]
         response = make_response(
             article_dict,
             200
